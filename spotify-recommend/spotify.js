@@ -17,11 +17,33 @@ var getArtist = function(name) {
     limit: 1,
     type: 'artist'
 	};
-	return getFromApi('balls', query).then(response => {
+	return getFromApi('search', query).then(response => {
 		artist = response.artists.items[0];
-		return artist;
-	}).catch(err => {console.log(err)})
+        artist_id = artist.id;
+		const related_artists_endpoint = `artists/${artist_id}/related-artists`;
+        return getFromApi(related_artists_endpoint, query);
+	}).then(response => {
+        let top_tracks_endpoint; // = `artists/${artist_id}/top-tracks`;
+        const allPromises = response.artists.forEach(artist => {
+            top_tracks_endpoint = `artists/${artist.id}/top-tracks`
+            return getFromApi(top_tracks_endpoint, query);
+        });
+        setTimeout(function() {
+            console.log(allPromises);
+        }, 3000)
+        return allPromises;
+    }).then(response => {
+        const allPromise = Promise.all(response)
+        console.log(allPromise);
+        return allPromise;
+    }).then(response => {
+        response.forEach(promise => {
+            artist.tracks = response.tracks
+        });
+        return artist;
+    })
 };
 
 
-//Promise.resolve(getFromApi).then
+
+//https://api.spotify.com/v1/artists/{id}/related-artists

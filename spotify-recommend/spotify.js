@@ -23,22 +23,18 @@ var getArtist = function(name) {
 		const related_artists_endpoint = `artists/${artist_id}/related-artists`;
         return getFromApi(related_artists_endpoint, query);
 	}).then(response => {
+        artist.related = response.artists;
         let top_tracks_endpoint; // = `artists/${artist_id}/top-tracks`;
-        const allPromises = response.artists.forEach(artist => {
+        const query = {
+            country: 'US'
+        }
+        return Promise.all(response.artists.map(artist => {
             top_tracks_endpoint = `artists/${artist.id}/top-tracks`
             return getFromApi(top_tracks_endpoint, query);
-        });
-        setTimeout(function() {
-            console.log(allPromises);
-        }, 3000)
-        return allPromises;
-    }).then(response => {
-        const allPromise = Promise.all(response)
-        console.log(allPromise);
-        return allPromise;
-    }).then(response => {
-        response.forEach(promise => {
-            artist.tracks = response.tracks
+        }));
+    }).then(responses => {
+        responses.forEach((response, index) => {
+            artist.related[index].tracks = response.tracks
         });
         return artist;
     })
